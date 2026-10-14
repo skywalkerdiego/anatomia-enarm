@@ -1,7 +1,7 @@
-import * as k from "../vendor/anatomy-kit/kit/iso-kit.mjs";
-import * as G from "../vendor/anatomy-kit/kit/lathe.mjs";
-import { tubePieces, tubeSvg } from "../vendor/anatomy-kit/kit/tube.mjs";
-import * as A from "../vendor/anatomy-kit/kit/audit.mjs";
+import * as k from "../../vendor/anatomy-kit/kit/iso-kit.mjs";
+import * as G from "../../vendor/anatomy-kit/kit/lathe.mjs";
+import { tubePieces, tubeSvg } from "../../vendor/anatomy-kit/kit/tube.mjs";
+import * as A from "../../vendor/anatomy-kit/kit/audit.mjs";
 
 export { k, G, A };
 
