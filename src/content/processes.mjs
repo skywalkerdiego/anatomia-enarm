@@ -261,4 +261,45 @@ export const PROCESSES = [
       },
     ],
   },
+  {
+    id: "ciclo-menstrual", model: "mujer", title: "Ciclo menstrual", blurb: "Ovario, endometrio y hormonas en 28 días.", hue: "#d6409f", glyph: "flow", monitor: false,
+    base: { only: ["utero", "ovarios", "trompas", "vagina", "vejiga", "recto", "pelvis", "sacro", "vasos-gonadales", "art-iliacas", "ven-iliacas"], ghost: { pelvis: 0.18, sacro: 0.18, vejiga: 0.5, recto: 0.5 }, focus: "utero", zoom: 9, turn: -0.35, pitch: 0.3 },
+    steps: [
+      {
+        title: "Menstruación (días 1–5)",
+        text: "Al caer la progesterona, la capa funcional del endometrio se descama y sangra. Al mismo tiempo sube la <b>FSH</b> y recluta una cohorte de folículos en los ovarios.",
+        facts: [["28 ± 7 días", "duración normal del ciclo"], ["2–7 días", "sangrado normal"]],
+        scene: { fx: { utero: { tint: ["sangre", 0.42] }, vagina: { tint: ["sangre", 0.3] } }, pins: [{ at: "utero#body of uterus", text: "Endometrio que se descama" }] },
+      },
+      {
+        title: "Fase folicular (días 6–13)",
+        text: "Un folículo se vuelve dominante y fabrica <b>estradiol</b>. El estrógeno hace crecer el endometrio (fase proliferativa) y vuelve el moco cervical claro y elástico, fácil de atravesar.",
+        facts: [["Estradiol", "lo produce el folículo dominante"], ["Proliferativo", "endometrio en esta fase"]],
+        scene: { fx: { ovarios: { spot: ["ovarios#right ovary", 11, "alimento", 0.95] }, utero: { swell: 1.2 } }, pins: [{ at: "ovarios#right ovary", text: "Folículo dominante" }] },
+      },
+      {
+        title: "Ovulación (día 14)",
+        text: "El estradiol alto dispara el <b>pico de LH</b>; 24 a 36 horas después el folículo se rompe. Las fimbrias barren el ovocito hacia la trompa, y la fecundación ocurre en la <b>ampolla</b>.",
+        facts: [["Pico de LH", "24–36 h antes"], ["Ampolla", "sitio de la fecundación"]],
+        scene: { fx: { ovarios: { spot: ["ovarios#right ovary", 14, "electrico", 1] }, trompas: { tint: ["electrico", 0.12] } }, pins: [{ at: "ovarios#right ovary", text: "Ovocito liberado", side: "left" }, { at: "trompas#left uterine tube", text: "Ampolla de la trompa" }] },
+      },
+      {
+        title: "Fase lútea (días 15–28)",
+        text: "Lo que queda del folículo se vuelve <b>cuerpo lúteo</b> y produce progesterona: el endometrio se vuelve secretor, listo para recibir un embrión, y la temperatura basal sube medio grado.",
+        facts: [["14 días", "fase lútea casi fija"], ["Progesterona", "endometrio secretor"]],
+        scene: { fx: { ovarios: { spot: ["ovarios#right ovary", 12, "calculo", 0.95] }, utero: { swell: 2, tint: ["inflamado", 0.12] } }, pins: [{ at: "ovarios#right ovary", text: "Cuerpo lúteo" }] },
+      },
+      {
+        title: "Si hay embarazo",
+        text: "El blastocisto se implanta 6 a 7 días después de la fecundación, casi siempre en el fondo uterino. La <b>hCG</b> del trofoblasto mantiene vivo al cuerpo lúteo hasta que la placenta toma el relevo, hacia las 10 semanas.",
+        facts: [["Día 6–7", "implantación"], ["hCG", "se duplica cada 48 h al inicio"]],
+        scene: { fx: { utero: { swell: 2, spot: ["utero#body of uterus", 12, "alimento", 0.8] } }, pins: [{ at: "utero#body of uterus", text: "Implantación" }] },
+      },
+      {
+        title: "Para el examen",
+        text: "Sin ovulación no hay cuerpo lúteo ni progesterona: el estrógeno sin oposición engruesa el endometrio y sangra de forma irregular (síndrome de ovario poliquístico). Los anticonceptivos combinados evitan el pico de LH. El sangrado uterino anormal se clasifica con PALM-COEIN.",
+        facts: [["PALM-COEIN", "causas de sangrado anormal"], ["Sin progesterona", "riesgo de hiperplasia endometrial"]],
+      },
+    ],
+  },
 ];

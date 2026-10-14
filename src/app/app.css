@@ -11,7 +11,8 @@ button:focus-visible,.gl:focus-visible,input:focus-visible,.grab:focus-visible{o
 .app{position:fixed;inset:0;overflow:hidden}
 
 /* ── stage ─────────────────────────────────────────────────────────────── */
-.stage{position:absolute;inset:0;background:radial-gradient(120% 70% at 50% 34%,var(--anatomy-card) 0%,var(--anatomy-page) 72%)}
+.stage{position:absolute;inset:0;background:#08080a}
+.iso[data-theme="light"] .stage{background:#d6d6da}
 .ped,.gl,.pins{position:absolute;inset:0;width:100%;height:100%}
 .ped{overflow:hidden;pointer-events:none}
 .gl{display:block;touch-action:none;outline-offset:-4px}
@@ -28,7 +29,7 @@ button:focus-visible,.gl:focus-visible,input:focus-visible,.grab:focus-visible{o
 .hud-read{flex:none}
 .app[data-dragging] .hud-foot,.app[data-dragging] .monitor,.app[data-dragging] .sheet{transition:none}
 
-.rail,.tools{position:absolute;top:calc(var(--safe-t) + 40px);display:flex;flex-direction:column;gap:6px;z-index:2}
+.rail,.tools{position:absolute;top:calc(var(--safe-t) + 86px);display:flex;flex-direction:column;gap:6px;z-index:2}
 .rail{right:10px}.tools{left:10px}
 .rail button,.tools button{min-width:46px;height:34px;padding:0 9px;border-radius:17px;background:var(--glass);-webkit-backdrop-filter:blur(14px) saturate(1.5);backdrop-filter:blur(14px) saturate(1.5);box-shadow:0 0 0 1px var(--line),0 4px 14px -6px rgba(0,0,0,.3);font-size:11.5px;font-weight:600;letter-spacing:.01em;color:var(--anatomy-muted);display:flex;align-items:center;justify-content:center;gap:5px;transition:background .2s,color .2s,transform .15s}
 .rail button i{width:7px;height:7px;border-radius:50%;background:var(--dot,#999);opacity:.35;transition:opacity .2s}
@@ -221,3 +222,14 @@ button:focus-visible,.gl:focus-visible,input:focus-visible,.grab:focus-visible{o
 }
 @media (prefers-reduced-motion:reduce){*{transition-duration:.01ms !important;animation:none !important}}
 .head{touch-action:none}
+
+/* ── body switch ─────────────────────────────────────────────────────────── */
+.sex{position:absolute;top:calc(var(--safe-t) + 34px);left:50%;transform:translateX(-50%);display:flex;gap:2px;padding:3px;border-radius:15px;background:var(--glass);-webkit-backdrop-filter:blur(16px) saturate(1.5);backdrop-filter:blur(16px) saturate(1.5);box-shadow:0 0 0 1px var(--line),0 6px 18px -8px rgba(0,0,0,.45);z-index:3}
+.sex button{height:30px;padding:0 16px;border-radius:12px;font-size:13px;font-weight:600;color:var(--anatomy-muted);transition:background .25s var(--anatomy-ease),color .25s}
+.sex button[aria-pressed="true"]{background:var(--chip-on);color:var(--chip-on-text);box-shadow:0 1px 4px rgba(0,0,0,.25)}
+.app[data-sheet="full"] .sex{opacity:0;pointer-events:none}
+.sex{transition:opacity .3s}
+.hud-top{text-shadow:0 1px 8px rgba(0,0,0,.5)}
+.iso[data-theme="light"] .hud-top{text-shadow:none}
+.loading{background:#08080a}
+.iso[data-theme="light"] .loading{background:#e4e4e7}

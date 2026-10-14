@@ -1,10 +1,9 @@
-// Builds docs/index.html: the stand (SVG from the anatomy kit), the app and its content in one page.
-// The 3D model itself is docs/body.bin.gz, made by tools/build_model.py with Blender.
+// Builds docs/index.html: the app, its content and both bodies' descriptions in one page.
+// The meshes are docs/models/<body>.bin.gz, made by tools/build_model.py (Blender) and tools/pack.mjs.
 //   node src/build.mjs
 import { readFileSync, writeFileSync, mkdirSync, statSync } from "node:fs";
 import { createHash } from "node:crypto";
 import * as k from "../vendor/anatomy-kit/kit/iso-kit.mjs";
-import { projection, pedestal, framing, ROD_TOP, CURSOR_REST } from "./pedestal.mjs";
 import { STRUCTS, MATS, LAYERS, SYSTEMS } from "./content/structs.mjs";
 import { CARDS } from "./content/cards.mjs";
 import { PROCESSES } from "./content/processes.mjs";
@@ -13,29 +12,44 @@ import { RHYTHMS, FACTS } from "./content/extras.mjs";
 
 const ROOT = new URL("../", import.meta.url);
 const read = (path) => readFileSync(new URL(path, ROOT), "utf8");
-const body = JSON.parse(read("src/body.json"));
-const gz = readFileSync(new URL("docs/body.bin.gz", ROOT));
-const version = createHash("sha1").update(gz).digest("hex").slice(0, 10);
-
-// Every structure of the model needs a name and a card that exists; every card needs a home.
-for (const s of body.structs) {
-  if (!STRUCTS[s.id]) throw new Error(`structs.mjs has no entry for ${s.id}`);
-  const card = STRUCTS[s.id].card;
-  if (card && !CARDS[card]) throw new Error(`${s.id} points to the missing card ${card}`);
+const BODIES = ["mujer", "hombre"];
+const models = {}, files = {};
+for (const name of BODIES) {
+  models[name] = JSON.parse(read(`src/models/${name}.json`));
+  const gz = readFileSync(new URL(`docs/models/${name}.bin.gz`, ROOT));
+  files[name] = { url: `models/${name}.bin.gz?v=${createHash("sha1").update(gz).digest("hex").slice(0, 10)}`, size: gz.length };
 }
-for (const p of PROCESSES) for (const step of p.steps) checkScene(step.scene, `process ${p.id}`);
-for (const p of PROCESSES) checkScene(p.base, `process ${p.id}`);
+const body = models.hombre;
+const version = createHash("sha1").update(JSON.stringify(files)).digest("hex").slice(0, 10);
+
+// Every structure of either body needs a name and a card that exists; every card needs a home.
+for (const name of BODIES) {
+  for (const s of models[name].structs) {
+    if (!STRUCTS[s.id]) throw new Error(`structs.mjs has no entry for ${s.id}`);
+    const card = STRUCTS[s.id].card;
+    if (card && !CARDS[card]) throw new Error(`${s.id} points to the missing card ${card}`);
+  }
+}
+// Scenes written for one body are checked against it; the rest against the male body, with a
+// note for anchors the female body lacks (the stage skips those there).
+const missing = new Set();
+for (const p of PROCESSES) for (const scene of [p.base, ...p.steps.map((step) => step.scene)]) checkScene(scene, `process ${p.id}`, p.model);
 for (const c of CASES) {
-  checkScene(c.base, `case ${c.id}`);
+  checkScene(c.base, `case ${c.id}`, c.model);
   for (const node of [c.intro, ...c.nodes]) {
-    checkScene(node.scene, `case ${c.id}`);
-    checkScene(node.after?.scene, `case ${c.id}`);
+    checkScene(node.scene, `case ${c.id}`, c.model);
+    checkScene(node.after?.scene, `case ${c.id}`, c.model);
     if (node.q && !(node.ok >= 0 && node.ok < node.options.length)) throw new Error(`case ${c.id}: bad answer index in "${node.q}"`);
   }
   for (const id of c.organs || []) if (!CARDS[id]) throw new Error(`case ${c.id}: unknown card ${id}`);
 }
-function checkScene(scene, where) {
+function checkScene(scene, where, model) {
   if (!scene) return;
+  if (!model) checkAnchors(scene, where, "mujer", true);
+  checkAnchors(scene, where, model || "hombre", false);
+}
+function checkAnchors(scene, where, model, soft) {
+  const body = models[model];
   const ids = [...Object.keys(scene.fx || {}), ...Object.keys(scene.ghost || {}), ...(scene.only || []), ...(scene.hide || []), ...(scene.select ? [scene.select] : [])];
   for (const id of ids) if (!STRUCTS[id]) throw new Error(`${where}: unknown structure ${id}`);
   // Anchors that name a structure or one of its parts must exist in the model.
@@ -49,30 +63,27 @@ function checkScene(scene, where) {
     if (typeof spec !== "string" || spec.startsWith("@") || spec === "home" || /^[CTL]\d+$|^S$/.test(spec)) continue;
     const [head, part] = spec.split("/");
     const [id, rest] = head.split(/[@#]/);
-    if (!meta[id]) throw new Error(`${where}: anchor "${spec}" names an unknown structure`);
     const name = part ?? (head.includes("#") ? rest : null);
-    if (name && !meta[id].parts.some((q) => q.n === name)) throw new Error(`${where}: anchor "${spec}" names an unknown part`);
+    const bad = !meta[id] ? "names an unknown structure" : name && !meta[id].parts.some((q) => q.n === name) ? "names an unknown part" : "";
+    if (bad && soft) missing.add(`${where}: ${spec}`);
+    else if (bad) throw new Error(`${where} (${model}): anchor "${spec}" ${bad}`);
   }
 }
 
-const P = projection();
-const camera = k.cameraOf(P);
-const frame = framing(P);
+if (missing.size) console.log(`not in the female body (skipped there): ${[...missing].join("; ")}`);
+
 const DATA = {
   version,
-  cam: {
-    cam: [camera.sinA, camera.cosA, camera.sinE, camera.cosE].map((v) => +v.toFixed(6)),
-    k: +camera.k.toFixed(6), origin: P.origin.map((v) => +v.toFixed(3)), cosE: +camera.cosE.toFixed(6),
-    fitW: +frame.fitW.toFixed(2), fitH: +frame.fitH.toFixed(2), home: frame.home.map((v) => +v.toFixed(1)),
-    rodTop: ROD_TOP, cursorRest: CURSOR_REST,
-  },
-  body, bodyUrl: `body.bin.gz?v=${version}`, bodyGz: statSync(new URL("docs/body.bin.gz", ROOT)).size,
+  cam: { fitH: 1980, fitW: 1050, home: [0, 0, 880], cursorRest: 900, rodTop: 1790 },
+  models, files,
   structs: STRUCTS, mats: MATS, layers: LAYERS, systems: SYSTEMS,
   cards: CARDS, processes: PROCESSES, cases: CASES, rhythms: RHYTHMS, facts: FACTS,
 };
 
+// The mesh decoder runs in the page; its module export is dropped so it inlines as a script.
+const decoder = read("node_modules/meshoptimizer/meshopt_decoder.mjs").replace(/export\s*\{[^}]*\};?\s*$/m, "");
 const FILES = ["core", "body", "physio", "monitor", "stage", "sheet", "explore", "processes", "cases", "quiz", "main"];
-const app = FILES.map((name) => read(`src/app/${name}.js`)).join("\n");
+const app = decoder + "\n" + FILES.map((name) => read(`src/app/${name}.js`)).join("\n");
 const css = read("src/app/app.css");
 const iconSvg = read("src/icon.svg");
 const tab = (id, name, glyph, on) => `<button role="tab" data-tab="${id}" aria-selected="${on}"><svg class="ic" viewBox="0 0 20 20" aria-hidden="true">${glyph}</svg><span>${name}</span></button>`;
@@ -95,10 +106,10 @@ const page = `<!doctype html>
 <body class="iso" data-theme="light">
 <div class="app">
   <section class="stage" aria-label="Modelo anatómico">
-    <svg class="iso-svg ped" aria-hidden="true"><g class="ped-g">${pedestal(P)}<circle class="ped-index" r="4.2"/></g></svg>
     <canvas class="gl" tabindex="0" role="img" aria-label="Cuerpo humano en tres dimensiones sobre un pedestal giratorio. Arrastra para girarlo, pellizca para acercar y toca una estructura para estudiarla."></canvas>
     <div class="pins" aria-hidden="true"></div>
     <div class="hud hud-top"><span class="hud-fig" data-fig>Fig 1</span><span class="hud-title" data-title>Cuerpo humano · 1:1</span></div>
+    <div class="sex" role="group" aria-label="Cuerpo"></div>
     <div class="hud hud-foot"><span data-hint>Arrastra para girar · toca un órgano</span><span class="hud-read"><b data-level></b></span></div>
     <div class="rail" role="group" aria-label="Capas del modelo"></div>
     <div class="tools" role="group" aria-label="Vista"></div>
@@ -137,7 +148,7 @@ writeFileSync(new URL("docs/index.html", ROOT), page);
 
 // The service worker caches the page and the model under this build's version.
 const sw = `const CACHE="cuerpo-enarm-${createHash("sha1").update(page).digest("hex").slice(0, 10)}";
-const FILES=["./","index.html","body.bin.gz?v=${version}","manifest.webmanifest","icon-180.png","icon-192.png","icon-512.png"];
+const FILES=["./","index.html","manifest.webmanifest","icon-180.png","icon-192.png","icon-512.png"];
 self.addEventListener("install",(e)=>{e.waitUntil(caches.open(CACHE).then((c)=>c.addAll(FILES)).then(()=>self.skipWaiting()))});
 self.addEventListener("activate",(e)=>{e.waitUntil(caches.keys().then((keys)=>Promise.all(keys.filter((k)=>k!==CACHE).map((k)=>caches.delete(k)))).then(()=>self.clients.claim()))});
 self.addEventListener("fetch",(e)=>{
@@ -149,4 +160,4 @@ self.addEventListener("fetch",(e)=>{
 });
 `;
 writeFileSync(new URL("docs/sw.js", ROOT), sw);
-console.log(`docs/index.html · ${(page.length / 1024).toFixed(0)} KB · model ${(DATA.bodyGz / 1048576).toFixed(2)} MB · ${body.structs.length} structures · ${Object.keys(CARDS).length} cards · ${PROCESSES.length} processes · ${CASES.length} cases`);
+console.log(`docs/index.html · ${(page.length / 1024).toFixed(0)} KB · models ${BODIES.map((n) => `${n} ${(files[n].size / 1048576).toFixed(1)} MB`).join(", ")} · ${body.structs.length} structures · ${Object.keys(CARDS).length} cards · ${PROCESSES.length} processes · ${CASES.length} cases`);

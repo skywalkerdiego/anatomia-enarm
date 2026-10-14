@@ -23,8 +23,8 @@ const Theme = (() => {
     const dark = theme === "dark";
     document.body.dataset.theme = theme;
     Body.look.dark = dark;
-    Body.look.accent = dark ? [1, 0.72, 0.2] : [0.9, 0.5, 0.02];
-    Body.look.ink = dark ? [0.02, 0.02, 0.03, 0.55] : [0.16, 0.14, 0.16, 0.5];
+    Body.look.accent = dark ? [1, 0.62, 0.16] : [0.95, 0.5, 0.05];
+    Body.setStudio(dark);
     $('meta[name="theme-color"]').content = dark ? "#0b0b0b" : "#f2f2ef";
   }
   function toggle() {
@@ -43,16 +43,30 @@ const Theme = (() => {
   const hooks = [];
   bus.on("frame-hook", (fn) => hooks.push(fn));
 
+  note.textContent = D.model === "mujer" ? "Cargando el cuerpo femenino…" : "Cargando el cuerpo masculino…";
   Sheet.init();
   Monitor.init();
   const ok = Body.init($(".gl"));
   Theme.apply();
 
   // Layer switches and view tools.
-  const DOT = { piel: "#EBC3A7", hueso: "#E8DFCA", organo: "#B5413F", vaso: "#3E62C6", nervio: "#E9B9A7" };
+  const DOT = { piel: "#E7B99C", musculo: "#A93C33", hueso: "#E8DFCA", organo: "#C9706B", vaso: "#3E62C6", nervio: "#F3D57A" };
   $(".rail").innerHTML = D.layers.map((l) => `<button type="button" data-layer="${l.id}" aria-pressed="true" aria-label="Capa: ${l.name}"><i style="--dot:${DOT[l.id]}"></i>${l.short}</button>`).join("");
   $(".tools").innerHTML = [["home", "home", "Ver el cuerpo completo"], ["flip", "turn", "Girar media vuelta"], ["explode", "explode", "Separar las piezas"], ["theme", "theme", "Tema claro u oscuro"]]
     .map(([act, glyph, label]) => `<button type="button" data-tool="${act}" aria-label="${label}" title="${label}">${icon(glyph)}</button>`).join("");
+  // The two bodies: switching loads the other model (it stays cached for next time).
+  const sexes = $(".sex");
+  sexes.innerHTML = [["mujer", "Mujer"], ["hombre", "Hombre"]].map(([id, name]) => `<button type="button" data-model="${id}" aria-pressed="${D.model === id}">${name}</button>`).join("");
+  sexes.addEventListener("click", (e) => {
+    const b = e.target.closest("button[data-model]");
+    if (!b || b.dataset.model === D.model) return;
+    store.set("modelo", b.dataset.model);
+    const url = new URL(location.href);
+    url.searchParams.delete("modelo");
+    $(".loading").removeAttribute("data-done");
+    $("[data-loading]").textContent = b.dataset.model === "mujer" ? "Cargando el cuerpo femenino…" : "Cargando el cuerpo masculino…";
+    setTimeout(() => location.replace(url), 60);
+  });
   $(".rail").addEventListener("click", (e) => {
     const b = e.target.closest("button[data-layer]");
     if (b) Stage.setLayer(b.dataset.layer, b.getAttribute("aria-pressed") !== "true");
@@ -101,5 +115,5 @@ const Theme = (() => {
     .catch((error) => { note.innerHTML = `${esc(error.message || error)}<br><button class="btn" style="margin-top:12px" onclick="location.reload()">Reintentar</button>`; });
 
   if ("serviceWorker" in navigator && location.protocol === "https:") navigator.serviceWorker.register("sw.js");
-  window.__app = { Body, Stage, Physio, Tabs, Sheet, Monitor };
+  window.__app = { Body, Stage, Physio, Tabs, Sheet, Monitor, Cases, Processes };
 })();

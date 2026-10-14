@@ -1,6 +1,7 @@
 // Study cards. Several structures of the model can open the same card.
 // Each card: name, a level or landmark line, sections of short points, a pearl and questions.
 import { TORSO } from "./cards-torso.mjs";
+import { EXTRA } from "./cards-extra.mjs";
 
 const q = (question, right, wrong, why) => ({ q: question, a: [right, ...wrong], ok: 0, why });
 
@@ -335,4 +336,4 @@ const MORE = {
   },
 };
 
-export const CARDS = { ...TORSO, ...MORE };
+export const CARDS = { ...TORSO, ...MORE, ...EXTRA };

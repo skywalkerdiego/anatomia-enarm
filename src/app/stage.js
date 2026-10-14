@@ -22,7 +22,8 @@ const Stage = (() => {
   const VEINS = ["vcs", "vci", "yugulares", "ven-renales", "ven-iliacas", "porta", "venas-cardiacas", "ven-pulmonares"];
   // How far each organ under the diaphragm follows it down in a quiet breath (mm).
   const SINK = { higado: 13, vesicula: 13, estomago: 11, bazo: 11, pancreas: 5, duodeno: 5, "rinon-der": 8, "rinon-izq": 8, suprarrenales: 8, colon: 3, yeyuno: 3 };
-  const CAGE = ["costillas", "cartilagos", "esternon"];
+  const QUIET = new Set(["ganglios"]);
+  const CAGE = ["costillas", "cartilagos", "esternon", "m-intercostales", "m-pectorales", "mamas", "n-intercostales", "art-tronco", "ven-tronco"];
   const base = {};
 
   // ── vertebral levels from the model's own vertebrae ─────────────────────
@@ -127,6 +128,18 @@ const Stage = (() => {
       } else if (s.id === "ureteres") {
         s.mode = 3;
         base[s.id] = { wave: [24, 110, 0.5, 1], flow: [0, 60, 0, 0] };
+      } else if (s.kind === "nerve") {
+        // Impulses: bright packets running out along every nerve.
+        s.mode = 3;
+        base[s.id] = { wave: [520, 340, 0, 2], flow: [0, 60, 0, 1.5] };
+      } else if (s.kind === "art") {
+        s.mode = 3;
+        base[s.id] = { wave: [1100, 0, 0.35, 0], flow: [0, 60, 0, 0.28] };
+      } else if (s.kind === "ven") {
+        s.mode = 3;
+        base[s.id] = { wave: [1, 0, 0, 0], flow: [-60, 36, 0.12, 0] };
+      } else if (s.id === "piel") {
+        s.mode = 6;
       }
       if (CAGE.includes(s.id)) s.pivot.set([0, 62, 1250, 1]);
       if (base[s.id]) for (const key of ["wave", "flow"]) { s.fx[key].set(base[s.id][key]); s.to[key].set(base[s.id][key]); }
@@ -145,6 +158,8 @@ const Stage = (() => {
       let on = layers[s.layer] ? 1 : 0;
       if (only.on) on = only.ids.has(s.id) ? 1 : s.id === "piel" && layers.piel ? 1 : 0;
       if (hidden.has(s.id)) on = 0;
+      // Lymph nodes are hundreds of specks: shown when chosen or when a scene asks for them.
+      if (QUIET.has(s.id) && !only.on && selected !== s.id && ghosts[s.id] === undefined) on = 0;
       if (on && ghosts[s.id] !== undefined) on = ghosts[s.id];
       s.show = on;
       if (on > 0 && s.id !== "piel") others = true;
@@ -166,10 +181,12 @@ const Stage = (() => {
 
   // ── selection ────────────────────────────────────────────────────────────
   const radiusOf = (s) => Math.hypot(s.meta.hi[0] - s.meta.lo[0], s.meta.hi[1] - s.meta.lo[1], s.meta.hi[2] - s.meta.lo[2]) / 2;
-  const zoomFor = (radius) => clamp(CAM.fitH / (CAM.k * CAM.cosE) / (radius * 3.3), 1, 10);
+  const zoomFor = (radius) => clamp(CAM.fitH / (radius * 3.4), 1, 11);
   function select(id, { focus = true, quiet = false, partIndex = -1 } = {}) {
     if (id && !S[id]) id = null;
+    const was = selected;
     selected = id;
+    if (QUIET.has(id) || QUIET.has(was)) applyLayers();
     part = partIndex;
     B.look.selected = id;
     B.look.lensTo = id && id !== "piel" ? 1 : 0;
@@ -192,10 +209,12 @@ const Stage = (() => {
   function home() {
     B.view.focusTo = CAM.home.slice();
     B.view.zoomTo = 1;
+    B.view.pitchTo = 0.16;
     B.view.panTo = [0, 0];
   }
-  function look({ focus, zoom, turn, pan } = {}) {
+  function look({ focus, zoom, turn, pan, pitch } = {}) {
     if (focus !== undefined) B.view.focusTo = focus === "home" ? CAM.home.slice() : anchor(focus).slice();
+    B.view.pitchTo = pitch ?? (zoom && zoom > 2.5 ? 0.12 : 0.16);
     if (zoom !== undefined) B.view.zoomTo = zoom;
     if (turn !== undefined) { B.view.turnTo = nearestTurn(turn); B.view.spin = 0; touched = true; }
     B.view.panTo = pan || [0, 0];
@@ -208,7 +227,7 @@ const Stage = (() => {
   function readout() {
     const s = selected && S[selected];
     const span = s ? levelSpan(s.meta.lo[2], s.meta.hi[2]) : "";
-    el.title.textContent = s ? s.info.name : sceneTitle || "Cuerpo humano · 1:1";
+    el.title.textContent = s ? s.info.name : sceneTitle || (D.model === "mujer" ? "Cuerpo femenino · 1:1" : "Cuerpo masculino · 1:1");
     el.level.textContent = s && span ? `Nivel ${span}` : "";
     cursorTo = s ? clamp(s.meta.c[2], 60, CAM.rodTop - 40) : CAM.cursorRest;
   }
@@ -270,17 +289,17 @@ const Stage = (() => {
     only.ids.clear();
     for (const key of Object.keys(ghosts)) delete ghosts[key];
     Object.assign(ghosts, spec.ghost || {});
-    if (spec.only) { only.on = true; for (const id of spec.only) only.ids.add(id); }
+    if (spec.only) { only.on = true; for (const id of spec.only) if (S[id]) only.ids.add(id); }
     for (const id of spec.hide || []) hidden.add(id);
     if (spec.layers) for (const l of D.layers) layers[l.id] = spec.layers.includes(l.id);
     applyLayers();
-    for (const [id, fx] of Object.entries(spec.fx || {})) setFx(id, fx);
+    for (const [id, fx] of Object.entries(spec.fx || {})) if (S[id]) setFx(id, fx);
     lungs.der.to = spec.lungs?.der ?? 0;
     lungs.izq.to = spec.lungs?.izq ?? 0;
     drive.contractTo = spec.contract ?? 1;
     sceneTitle = spec.title || "";
     select(spec.select ?? null, { focus: false, quiet: true });
-    if (spec.focus || spec.zoom || spec.turn !== undefined) look({ focus: spec.focus ?? "home", zoom: spec.zoom ?? 1, turn: spec.turn, pan: spec.pan });
+    if (spec.focus || spec.zoom || spec.turn !== undefined) look({ focus: spec.focus ?? "home", zoom: spec.zoom ?? 1, turn: spec.turn, pan: spec.pan, pitch: spec.pitch });
     setPins(spec.pins || []);
     if (spec.explode !== undefined) B.look.explodeTo = spec.explode;
     readout();
@@ -318,8 +337,8 @@ const Stage = (() => {
   }
   function placePins() {
     for (const p of pins) {
-      const [x, y] = B.toScreen(p.at);
-      const inside = x > 8 && x < B.view.width - 8 && y > B.view.insetNow.top && y < B.view.height - B.view.insetNow.bottom + 8;
+      const [x, y, w] = B.toScreen(p.at);
+      const inside = w > 0 && x > 8 && x < B.view.width - 8 && y > B.view.insetNow.top && y < B.view.height - B.view.insetNow.bottom + 8;
       p.el.style.transform = `translate3d(${x.toFixed(1)}px,${y.toFixed(1)}px,0)`;
       p.el.dataset.flip = x > B.view.width * 0.6 || p.side === "left" ? "1" : "";
       p.el.style.opacity = inside ? "1" : "0";
@@ -338,7 +357,7 @@ const Stage = (() => {
       B.view.turnTo = B.view.turn;
       const pts = [...pointers.values()];
       gesture = pts.length === 1
-        ? { kind: "turn", x: e.clientX, y: e.clientY, t: performance.now(), moved: 0, turn: B.view.turn, pan: B.view.panTo.slice(), vx: 0 }
+        ? { kind: "turn", x: e.clientX, y: e.clientY, t: performance.now(), moved: 0, turn: B.view.turn, pitch: B.view.pitchTo, pan: B.view.panTo.slice(), vx: 0 }
         : { kind: "pinch", d: Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y), cx: (pts[0].x + pts[1].x) / 2, cy: (pts[0].y + pts[1].y) / 2, zoom: B.view.zoomTo, pan: B.view.panTo.slice(), moved: 99 };
     });
     canvas.addEventListener("pointermove", (e) => {
@@ -352,9 +371,8 @@ const Stage = (() => {
         const turn = gesture.turn + dx * 0.0085;
         gesture.vx = (turn - B.view.turnTo) * 60;
         B.view.turnTo = B.view.turn = turn;
-        const limit = B.view.height * 0.5 * B.view.zoomTo;
-        B.view.panTo[1] = clamp(gesture.pan[1] + dy, -limit, limit);
-        B.view.pan[1] = B.view.panTo[1];
+        // Up and down tilts the camera over the body.
+        B.view.pitchTo = clamp(gesture.pitch + dy * 0.0045, -0.12, 1.15);
       } else if (gesture.kind === "pinch" && pts.length >= 2) {
         const d = Math.hypot(pts[0].x - pts[1].x, pts[0].y - pts[1].y);
         const cx = (pts[0].x + pts[1].x) / 2, cy = (pts[0].y + pts[1].y) / 2;
@@ -369,7 +387,7 @@ const Stage = (() => {
       if (pointers.size === 0) gesture = null;
       else if (pointers.size === 1) {
         const p = [...pointers.values()][0];
-        gesture = { kind: "turn", x: p.x, y: p.y, t: 0, moved: 99, turn: B.view.turn, pan: B.view.panTo.slice(), vx: 0 };
+        gesture = { kind: "turn", x: p.x, y: p.y, t: 0, moved: 99, turn: B.view.turn, pitch: B.view.pitchTo, pan: B.view.panTo.slice(), vx: 0 };
         return;
       }
       if (!g || g.kind !== "turn") return;
@@ -400,7 +418,6 @@ const Stage = (() => {
   }
 
   // ── frame ────────────────────────────────────────────────────────────────
-  let pedShown = "";
   function frame(t, dt) {
     const v = B.view;
     if (!gesture) {
@@ -434,25 +451,17 @@ const Stage = (() => {
       else if (s.mode === 4) s.la[0] = 17 * b;
       else if (SINK[s.id]) s.shift[2] -= SINK[s.id] * b;
       else if (CAGE.includes(s.id)) s.pivot[3] = 1 + 0.012 * b;
+      if (s.mode === 6) s.la[0] = b;
     }
-    // The stand follows the camera; the cursor slides to the selected level.
-    const text = `translate(${v.tx.toFixed(2)} ${v.ty.toFixed(2)}) scale(${v.scale.toFixed(4)})`;
-    if (text !== pedShown) { pedShown = text; el.ped.setAttribute("transform", text); }
+    // The cursor on the height rod slides to the selected level.
     cursorZ += (cursorTo - cursorZ) * (1 - Math.exp(-dt / 0.25));
-    el.cursor.setAttribute("transform", `translate(0 ${(-(cursorZ - CAM.cursorRest) * CAM.cosE * CAM.k).toFixed(2)})`);
-    const mark = B.toBox(B.turned([0, -238, 0]));
-    el.index.setAttribute("cx", mark[0].toFixed(2));
-    el.index.setAttribute("cy", mark[1].toFixed(2));
-    el.index.setAttribute("r", (3.4 / v.scale).toFixed(2));
+    B.look.cursor = cursorZ;
     placePins();
   }
 
   function init() {
     el.title = $("[data-title]");
     el.level = $("[data-level]");
-    el.ped = $(".ped-g");
-    el.cursor = $(".ped-cursor");
-    el.index = $(".ped-index");
     el.pins = $(".pins");
     setup();
     bind($(".gl"));

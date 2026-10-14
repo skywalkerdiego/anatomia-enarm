@@ -165,7 +165,7 @@ const Processes = (() => {
   // ── views ────────────────────────────────────────────────────────────────
   const current = () => D.processes.find((p) => p.id === state.id)?.steps[state.step] || {};
   function listHtml() {
-    const cards = D.processes.map((p) => `<button class="card" data-open="${p.id}" style="--hue:${p.hue}"><span class="glyph">${icon(p.glyph)}</span><b>${esc(p.title)}</b><small>${esc(p.blurb)}</small><span class="meta">${p.steps.length} pasos${seen[p.id] ? ` · ${icon("check").replace('class="ic"', 'class="ic" style="width:12px;height:12px"')} visto` : ""}</span></button>`).join("");
+    const cards = D.processes.filter((p) => !p.model || p.model === D.model).map((p) => `<button class="card" data-open="${p.id}" style="--hue:${p.hue}"><span class="glyph">${icon(p.glyph)}</span><b>${esc(p.title)}</b><small>${esc(p.blurb)}</small><span class="meta">${p.steps.length} pasos${seen[p.id] ? ` · ${icon("check").replace('class="ic"', 'class="ic" style="width:12px;height:12px"')} visto` : ""}</span></button>`).join("");
     return `<div class="head"><h2><span class="sub">Fisiología en movimiento</span>Procesos</h2></div><p class="muted" style="font-size:13.5px">Cada proceso se reproduce sobre el cuerpo: lo que ves moverse sale del mismo modelo que dibuja el monitor.</p><div class="grid">${cards}<button class="card" data-rhythms style="--hue:#30a46c"><span class="glyph">${icon("flow")}</span><b>Ritmos del monitor</b><small>Ocho trazos: cómo se ven y qué hacer.</small><span class="meta">ECG en vivo</span></button></div>`;
   }
   function stepHtml() {

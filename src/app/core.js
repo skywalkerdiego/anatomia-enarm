@@ -25,6 +25,16 @@ const store = {
   },
 };
 
+// Which body to show: ?modelo= in the address, else the last one chosen, else the female body.
+const MODEL = (() => {
+  const asked = new URLSearchParams(location.search).get("modelo") || store.get("modelo", "mujer");
+  return D.models[asked] ? asked : "hombre";
+})();
+D.body = D.models[MODEL];
+D.bodyUrl = D.files[MODEL].url;
+D.bodyGz = D.files[MODEL].size;
+D.model = MODEL;
+
 const bus = {
   handlers: {},
   on(name, fn) { (this.handlers[name] ??= []).push(fn); },

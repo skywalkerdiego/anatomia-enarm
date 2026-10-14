@@ -25,7 +25,7 @@ const Sheet = (() => {
     const cover = Math.min(height, innerHeight * 0.47);
     Body.view.inset = wide()
       ? { top: safeT + 40, right: 432, bottom: 20, left: 60 }
-      : { top: safeT + 38, right: 58, bottom: tabH() + cover + mon + 30, left: 10 };
+      : { top: safeT + 84, right: 58, bottom: tabH() + cover + mon + 26, left: 10 };
   }
   function set(name, { peekHeight } = {}) {
     if (peekHeight) peek = peekHeight;

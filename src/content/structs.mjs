@@ -2,20 +2,26 @@
 
 export const LAYERS = [
   { id: "piel", name: "Piel", short: "Piel" },
+  { id: "musculo", name: "Músculos", short: "Músc." },
   { id: "hueso", name: "Esqueleto", short: "Hueso" },
   { id: "organo", name: "Órganos", short: "Órg." },
   { id: "vaso", name: "Vasos", short: "Vasos" },
-  { id: "nervio", name: "Encéfalo", short: "SNC" },
+  { id: "nervio", name: "Sistema nervioso", short: "Nerv." },
 ];
 
-// wrap (soft light), specular, gloss, rim
+// Physically based materials: roughness, metallic, clearcoat (wet layer), subsurface,
+// micro-detail kind (1 bone, 2 wet tissue, 3 fibres, 4 vessel, 5 brain, 6 skin), its strength,
+// emissive, translucency of thin parts, and the colour light takes inside the tissue.
 export const MATS = {
-  piel: [0.5, 0.1, 20, 0.4],
-  hueso: [0.24, 0.07, 14, 0.3],
-  cartilago: [0.36, 0.22, 30, 0.36],
-  organo: [0.55, 0.2, 52, 0.36],
-  vaso: [0.45, 0.5, 64, 0.42],
-  nervio: [0.5, 0.22, 34, 0.34],
+  piel: [0.5, 0, 0.12, 0.65, 6, 0.1, 0, 0.6, [0.95, 0.42, 0.3]],
+  hueso: [0.56, 0, 0.06, 0.16, 1, 0.24, 0, 0.18, [0.92, 0.78, 0.58]],
+  cartilago: [0.36, 0, 0.3, 0.4, 2, 0.08, 0, 0.55, [0.72, 0.84, 0.95]],
+  organo: [0.34, 0, 0.6, 0.62, 2, 0.14, 0, 0.45, [0.95, 0.32, 0.24]],
+  vaso: [0.28, 0, 0.65, 0.5, 4, 0.06, 0, 0.6, [0.95, 0.24, 0.2]],
+  nervio: [0.48, 0, 0.38, 0.45, 5, 0.12, 0, 0.32, [0.95, 0.52, 0.46]],
+  musculo: [0.44, 0, 0.32, 0.55, 3, 0.42, 0, 0.35, [0.95, 0.22, 0.18]],
+  fibra: [0.42, 0, 0.3, 0.42, 3, 0.25, 0, 0.45, [0.98, 0.86, 0.5]],
+  glandula: [0.4, 0, 0.45, 0.68, 2, 0.1, 0, 0.6, [1, 0.72, 0.5]],
 };
 
 export const SYSTEMS = [
@@ -25,6 +31,7 @@ export const SYSTEMS = [
   { id: "uro", name: "Urinario y genital" },
   { id: "neuro", name: "Sistema nervioso" },
   { id: "osteo", name: "Esqueleto" },
+  { id: "musc", name: "Músculos" },
 ];
 
 const BONE = "#E8DFCA";
@@ -33,7 +40,68 @@ const VEN = "#3E62C6";
 
 // id: [name, short name, system, colour, material, card]
 const T = {
-  piel: ["Piel", "Piel", "osteo", "#EBC3A7", "piel", null],
+  piel: ["Piel", "Piel", "osteo", "#E7B99C", "piel", null],
+
+  "m-cabeza": ["Músculos de la cabeza y la cara", "Cara", "musc", "#A93C33", "musculo", "cara"],
+  "m-cuello": ["Músculos del cuello", "Cuello", "musc", "#A53A31", "musculo", "cuello"],
+  "m-trapecio": ["Trapecio", "Trapecio", "musc", "#A2372F", "musculo", "espalda"],
+  "m-espalda": ["Músculos profundos de la espalda", "Espalda", "musc", "#9E3730", "musculo", "espalda"],
+  "m-dorsal": ["Dorsal ancho", "Dorsal", "musc", "#A53A31", "musculo", "espalda"],
+  "m-pectorales": ["Pectorales y serrato anterior", "Pectorales", "musc", "#AC3D33", "musculo", "pared-toracica"],
+  "m-intercostales": ["Músculos intercostales", "Intercostales", "musc", "#9F3830", "musculo", "pared-toracica"],
+  "m-abdomen": ["Pared abdominal", "Abdomen", "musc", "#A83B32", "musculo", "pared-abdominal"],
+  "m-hombro": ["Deltoides y manguito rotador", "Hombro", "musc", "#AA3C33", "musculo", "hombro"],
+  "m-brazo": ["Músculos del brazo", "Brazo", "musc", "#A93B32", "musculo", "humero"],
+  "m-antebrazo": ["Músculos del antebrazo", "Antebrazo", "musc", "#A63A31", "musculo", "antebrazo"],
+  "m-mano": ["Músculos de la mano", "Mano", "musc", "#A43930", "musculo", "mano"],
+  "m-gluteos": ["Músculos glúteos", "Glúteos", "musc", "#A73A31", "musculo", "femur"],
+  "m-psoas": ["Psoas ilíaco", "Psoas", "musc", "#AE3E34", "musculo", "femur"],
+  "m-muslo-ant": ["Cuádriceps y sartorio", "Cuádriceps", "musc", "#AB3C33", "musculo", "femur"],
+  "m-muslo-med": ["Aductores del muslo", "Aductores", "musc", "#A53A31", "musculo", "femur"],
+  "m-isquios": ["Isquiotibiales", "Isquiotibiales", "musc", "#A23830", "musculo", "pierna"],
+  "m-pierna": ["Músculos de la pierna", "Pierna", "musc", "#A83B32", "musculo", "pierna"],
+  "m-pie": ["Músculos del pie", "Pie", "musc", "#A43930", "musculo", "pie"],
+  "m-perine": ["Suelo pélvico", "Suelo pélvico", "musc", "#A93C33", "musculo", "suelo-pelvico"],
+
+  utero: ["Útero y cuello uterino", "Útero", "uro", "#C9706B", "organo", "utero"],
+  ovarios: ["Ovarios", "Ovarios", "uro", "#E3B9A6", "organo", "ovarios"],
+  trompas: ["Trompas uterinas", "Trompas", "uro", "#D98E86", "organo", "ovarios"],
+  vagina: ["Vagina y uretra femenina", "Vagina", "uro", "#D88F8B", "organo", "utero"],
+  mamas: ["Glándulas mamarias", "Mamas", "uro", "#E6A88E", "glandula", "mama"],
+  "vasos-gonadales": ["Arterias uterinas, vaginales y ováricas", "A. uterinas", "cardio", "#D9453B", "vaso", "utero"],
+  "ven-gonadales": ["Venas uterinas, ováricas y plexo pampiniforme", "V. ováricas", "cardio", "#3E62C6", "vaso", "utero"],
+
+  "art-cerebrales": ["Arterias cerebrales y polígono de Willis", "A. cerebrales", "cardio", "#E04A3F", "vaso", "art-cerebrales"],
+  "art-cabeza": ["Carótida externa y sus ramas", "A. de la cara", "cardio", "#DA463C", "vaso", "supraaorticos"],
+  "ven-cabeza": ["Venas de la cabeza y senos durales", "V. de la cabeza", "cardio", "#4064C8", "vaso", "venas-cabeza"],
+  "art-brazo": ["Arterias del miembro superior", "A. del brazo", "cardio", "#D9453B", "vaso", "arterias-miembros"],
+  "ven-brazo": ["Venas del miembro superior", "V. del brazo", "cardio", "#3E62C6", "vaso", "venas-miembros"],
+  "art-pierna": ["Arterias del miembro inferior", "A. de la pierna", "cardio", "#D9453B", "vaso", "arterias-miembros"],
+  "ven-pierna": ["Venas del miembro inferior y safenas", "V. de la pierna", "cardio", "#3E62C6", "vaso", "venas-miembros"],
+  "art-tronco": ["Mamarias internas, intercostales y lumbares", "A. de la pared", "cardio", "#D6443A", "vaso", "pared-toracica"],
+  "ven-tronco": ["Sistema ácigos y venas de la pared", "Ácigos", "cardio", "#3D60C2", "vaso", "cavas"],
+  "art-visceral": ["Ramas viscerales de la aorta", "A. viscerales", "cardio", "#D9453B", "vaso", "aorta"],
+  "ven-visceral": ["Vena porta y venas viscerales", "V. porta", "cardio", "#5B57C9", "vaso", "porta"],
+  "n-craneales": ["Pares craneales", "Pares craneales", "neuro", "#F2D16B", "fibra", "pares-craneales"],
+  "n-facial": ["Nervio facial (VII)", "Facial", "neuro", "#F5D86E", "fibra", "facial"],
+  "n-vago": ["Nervio vago (X) y laríngeos", "Vago", "neuro", "#F0CE66", "fibra", "vago"],
+  "plexo-braquial": ["Plexo braquial", "Plexo braquial", "neuro", "#F3D57A", "fibra", "plexo-braquial"],
+  "n-axilar": ["Nervio axilar", "Axilar", "neuro", "#F5DA7E", "fibra", "plexo-braquial"],
+  "n-musculocutaneo": ["Nervio musculocutáneo", "Musculocutáneo", "neuro", "#F5DA7E", "fibra", "plexo-braquial"],
+  "n-radial": ["Nervio radial", "Radial", "neuro", "#F7DC80", "fibra", "n-radial"],
+  "n-mediano": ["Nervio mediano", "Mediano", "neuro", "#F7DC80", "fibra", "n-mediano"],
+  "n-cubital": ["Nervio cubital (ulnar)", "Cubital", "neuro", "#F7DC80", "fibra", "n-cubital"],
+  "n-intercostales": ["Nervios intercostales", "Intercostales", "neuro", "#EFD173", "fibra", "pared-toracica"],
+  "plexo-lumbar": ["Plexo lumbar y nervio obturador", "Plexo lumbar", "neuro", "#F3D57A", "fibra", "nervios-mi"],
+  "n-femoral": ["Nervio femoral y safeno", "Femoral", "neuro", "#F7DC80", "fibra", "nervios-mi"],
+  "n-ciatico": ["Nervio ciático, tibial y peroneos", "Ciático", "neuro", "#F7DC80", "fibra", "nervios-mi"],
+  "n-pelvicos": ["Nervio pudendo y nervios glúteos", "Pudendo", "neuro", "#F0D06F", "fibra", "nervios-mi"],
+  "n-autonomo": ["Cadena simpática", "Simpático", "neuro", "#E6C35E", "fibra", "autonomo"],
+  "raices": ["Raíces raquídeas y cola de caballo", "Raíces", "neuro", "#F2D16B", "fibra", "columna"],
+  ganglios: ["Ganglios linfáticos", "Ganglios", "cardio", "#7DB87B", "glandula", "linfaticos"],
+  tiroides: ["Tiroides y paratiroides", "Tiroides", "resp", "#B5524A", "organo", "tiroides"],
+  salivales: ["Glándulas salivales", "Salivales", "digest", "#E8B87F", "glandula", "salivales"],
+  "lengua-faringe": ["Lengua, paladar y faringe", "Lengua", "digest", "#C8626A", "organo", "cuello"],
 
   craneo: ["Cráneo", "Cráneo", "osteo", "#E9E1CC", "hueso", "craneo"],
   mandibula: ["Mandíbula", "Mandíbula", "osteo", "#E6DDC6", "hueso", "craneo"],

@@ -12,6 +12,7 @@ const CORTEX = ["lob-frontal", "giro-precentral", "giro-poscentral", "lob-pariet
 const each = (ids, fx) => Object.fromEntries(ids.map((id) => [id, fx]));
 const ghost = (ids, alpha) => Object.fromEntries(ids.map((id) => [id, alpha]));
 const MCA = [54, 4, 1592];
+const FEMALE = ["utero", "ovarios", "trompas", "vagina", "vejiga", "recto", "pelvis", "sacro", "vasos-gonadales", "ven-gonadales", "art-iliacas", "ven-iliacas", "ureteres"];
 
 export const CASES = [
   {
@@ -347,5 +348,60 @@ export const CASES = [
       },
     ],
     pearls: ["Inestable con FAST positivo: quirófano, no tomografía.", "La presión arterial es un signo tardío de hemorragia.", "Sin bazo: vacunas contra encapsulados."],
+  },
+  {
+    id: "ectopico", model: "mujer", title: "Retraso menstrual, dolor y desmayo", area: "Ginecología", hue: "#d6409f", glyph: "cases", level: 2, organs: ["ovarios", "utero"],
+    patient: "Mujer de 27 años · retraso menstrual de 7 semanas",
+    base: { only: FEMALE, ghost: { ...ghost(["pelvis", "sacro"], 0.22), vejiga: 0.45, recto: 0.45 }, focus: "utero", zoom: 8.5, turn: -0.4, pitch: 0.3 },
+    intro: {
+      text: "Desde ayer tiene dolor en la parte baja derecha del abdomen y un sangrado vaginal escaso y oscuro. Hace una hora se desmayó en el baño. Tuvo una infección pélvica hace dos años.",
+      exam: ["Dolor en fosa ilíaca derecha con rebote", "Dolor a la movilización del cuello uterino", "Fondo de saco posterior abombado y doloroso"],
+      labs: [["3 200 mUI/mL", "hCG cuantitativa"], ["9.1 g/dL", "hemoglobina"]],
+      vitals: { hr: 122, sys: 84, dia: 50, rr: 22, spo2: 97, perf: 0.65 },
+    },
+    nodes: [
+      { q: "La hCG es positiva. ¿Qué estudio confirma dónde está el embarazo?", options: ["Tomografía de abdomen con contraste", "Ultrasonido transvaginal", "Repetir la hCG en 48 horas antes de cualquier imagen", "Radiografía de abdomen de pie"], ok: 1, why: "Con hCG por encima de la zona discriminatoria (1 500–2 000 mUI/mL), un útero vacío en el ultrasonido transvaginal sugiere embarazo ectópico. La ecografía también muestra líquido libre en el fondo de saco." },
+      {
+        title: "Qué está pasando",
+        text: "La infección previa dañó los cilios y los pliegues de la trompa, y el embrión no llegó al útero: se implantó en la <b>ampolla de la trompa derecha</b>. El trofoblasto invade una pared muy delgada; entre las 6 y las 8 semanas la trompa <b>se rompe</b> y sangra hacia el peritoneo. La sangre baja al punto más declive, el <b>fondo de saco de Douglas</b>, entre el útero y el recto.",
+        facts: [["95 %", "tubáricos; la ampolla el más frecuente"], ["Douglas", "donde se acumula la sangre"]],
+        scene: { fx: { trompas: { spot: ["trompas#right uterine tube", 13, "sangre", 0.95] }, recto: { spot: ["utero#cervix of uterus", 30, "sangre", 0.7] }, utero: { tint: ["palido", 0.25] } }, pins: [{ at: "trompas#right uterine tube", text: "Trompa rota", tone: "bad", side: "left" }, { at: "utero#cervix of uterus", text: "Sangre en el fondo de saco" }] },
+      },
+      {
+        q: "Tiene taquicardia, hipotensión y líquido libre abundante. ¿Qué sigue?", options: ["Metotrexato intramuscular", "Legrado uterino", "Reanimación con cristaloides y sangre, y cirugía urgente (salpingectomía)", "Vigilar la hCG cada 48 horas"], ok: 2,
+        why: "El ectópico roto con inestabilidad es una urgencia quirúrgica: laparoscopia si el equipo lo permite, si no laparotomía. El metotrexato solo sirve en pacientes estables sin rotura.",
+        after: { scene: { fx: { trompas: { spot: ["trompas#right uterine tube", 13, "palido", 0.7] } }, pins: [{ at: "trompas#right uterine tube", text: "Salpingectomía derecha", tone: "good", side: "left" }] }, vitals: { hr: 94, sys: 108, dia: 66, perf: 0.95 } },
+      },
+      { q: "Otra paciente, estable y sin rotura, tiene una masa tubaria de 2.5 cm sin latido embrionario y hCG de 1 800 mUI/mL. ¿Qué puede recibir?", options: ["Metotrexato con seguimiento de la hCG", "Salpingectomía urgente siempre", "Solo analgésicos", "Misoprostol vaginal"], ok: 0, why: "Criterios para metotrexato: estable, sin rotura, masa menor de 3.5 cm, sin latido y hCG baja (en general menos de 5 000). Se sigue la hCG hasta que se negativiza." },
+      { q: "La paciente operada es Rh negativo. ¿Qué falta?", options: ["Nada más", "Inmunoglobulina anti-D", "Transfundir plasma", "Ácido fólico"], ok: 1, why: "Toda mujer Rh negativo con sangrado en el embarazo, incluido el ectópico, recibe inmunoglobulina anti-D para evitar la aloinmunización." },
+    ],
+    pearls: ["Mujer en edad fértil con dolor abdominal: primero la prueba de embarazo.", "Factores de riesgo: enfermedad pélvica inflamatoria, ectópico previo, cirugía tubaria, DIU y reproducción asistida.", "Inestable: cirugía. Estable y pequeño: metotrexato."],
+  },
+  {
+    id: "torsion", model: "mujer", title: "Dolor súbito con un quiste de ovario", area: "Ginecología", hue: "#b4418e", glyph: "pin", level: 2, organs: ["ovarios", "utero"],
+    patient: "Mujer de 24 años · quiste de ovario izquierdo de 6 cm",
+    base: { only: FEMALE, ghost: { ...ghost(["pelvis", "sacro"], 0.22), vejiga: 0.45, recto: 0.45 }, focus: "ovarios#left ovary", zoom: 9.5, turn: 0.55, pitch: 0.28 },
+    intro: {
+      text: "Al terminar de correr sintió un dolor muy intenso y repentino en la parte baja izquierda del abdomen, con náusea y vómito. El dolor no cede con nada.",
+      exam: ["Masa anexial izquierda muy dolorosa", "Abdomen sin rigidez generalizada", "Sin fiebre"],
+      labs: [["Negativa", "prueba de embarazo"], ["11 200", "leucocitos"]],
+      vitals: { hr: 108, sys: 128, dia: 80, rr: 20, spo2: 99, temp: 37.2 },
+    },
+    nodes: [
+      { q: "¿Qué estudio pides?", options: ["Tomografía con contraste", "Ultrasonido pélvico transvaginal con Doppler", "Radiografía de abdomen", "Laparoscopia diagnóstica sin imagen en todos los casos"], ok: 1, why: "El ultrasonido muestra el ovario aumentado y edematoso, los folículos desplazados a la periferia, el signo del remolino en el pedículo y el flujo." },
+      {
+        title: "Qué está pasando",
+        text: "El quiste hace pesado al ovario, que <b>gira sobre su pedículo</b>: el ligamento suspensorio con los vasos ováricos y el ligamento útero-ovárico. Primero se comprimen las venas y los linfáticos, de paredes delgadas: el ovario se congestiona y crece. Si la torsión sigue, se cierra la arteria: <b>isquemia y necrosis</b>.",
+        facts: [["≥ 5 cm", "la masa que más se tuerce"], ["Venas primero", "luego la arteria"]],
+        scene: { fx: { ovarios: { spot: ["ovarios#left ovary", 20, "isquemia", 0.9] }, "ven-gonadales": { spot: ["ovarios#left ovary", 34, "isquemia", 0.7] }, "vasos-gonadales": { spot: ["ovarios#left ovary", 26, "isquemia", 0.5] } }, pins: [{ at: "ovarios#left ovary", text: "Ovario congestivo", tone: "bad" }, { at: "ven-gonadales#left ovarian vein", text: "Pedículo torcido", side: "left" }] },
+      },
+      { q: "El Doppler muestra flujo arterial en el ovario. ¿Qué concluyes?", options: ["Se descarta la torsión", "La sospecha sigue: el flujo puede persistir por la doble irrigación; la decisión es clínica", "Hay que esperar 24 horas y repetir el estudio", "Es una apendicitis"], ok: 1, why: "El ovario recibe sangre de la arteria ovárica y de la rama ovárica de la uterina, y la torsión puede ser parcial o intermitente. Un Doppler normal no descarta la torsión." },
+      {
+        q: "¿Cuál es el tratamiento?", options: ["Ooforectomía en todos los casos", "Laparoscopia urgente para destorcer el anexo y conservar el ovario", "Analgésico y observación", "Antibióticos intravenosos"], ok: 1,
+        why: "Se destuerce y se conserva el ovario aunque se vea oscuro: la mayoría recupera su función. El quiste se trata en el mismo acto o después, según su tipo.",
+        after: { scene: { fx: { ovarios: { spot: ["ovarios#left ovary", 20, "sano", 0.35] } }, pins: [{ at: "ovarios#left ovary", text: "Ovario destorcido", tone: "good" }] }, vitals: { hr: 84, sys: 118, dia: 74 } },
+      },
+    ],
+    pearls: ["Dolor súbito, náusea y masa anexial: torsión hasta demostrar lo contrario.", "Un Doppler normal no descarta la torsión.", "Destorcer y conservar el ovario, sobre todo en mujeres jóvenes."],
   },
 ];
