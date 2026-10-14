@@ -32,6 +32,7 @@ const Sheet = (() => {
     snap = name;
     height = heights()[snap];
     sheet.dataset.snap = snap;
+    app.dataset.sheet = snap;
     layout();
   }
   /** At least this tall (never shrinks a sheet the reader opened wider). */

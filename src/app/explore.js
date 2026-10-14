@@ -1,7 +1,7 @@
 // ── Explore: find a structure, tap it on the body, read its card ──
 const Explore = (() => {
   const state = { query: "", sys: "", isolated: false };
-  const PEEK = 122;
+  const PEEK = 114;
   const ORD_ES = { first: 1, second: 2, third: 3, fourth: 4, fifth: 5, sixth: 6, seventh: 7, eighth: 8, ninth: 9, tenth: 10, eleventh: 11, twelfth: 12 };
 
   /** A readable Spanish name for the part that was tapped, when the part is worth naming. */
