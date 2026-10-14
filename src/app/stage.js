@@ -380,7 +380,7 @@ const Stage = (() => {
         const double = now - lastTap.t < 320 && Math.hypot(x - lastTap.x, y - lastTap.y) < 28;
         lastTap = { t: now, x, y };
         bus.emit("tap", { hit: B.pick(x, y, 9), x, y, double });
-      } else if (Math.abs(g.vx) > 0.4) B.view.spin = clamp(g.vx, -7, 7);
+      } else if (Math.abs(g.vx) > 0.6) B.view.spin = clamp(g.vx * 0.5, -3.5, 3.5);
       if (B.view.zoomTo < 1) { B.view.zoomTo = 1; B.view.panTo = [0, 0]; }
     };
     canvas.addEventListener("pointerup", up);
@@ -407,11 +407,11 @@ const Stage = (() => {
       if (Math.abs(v.spin) > 0.002) {
         v.turn += v.spin * dt;
         v.turnTo = v.turn;
-        v.spin *= Math.exp(-dt / 0.55);
+        v.spin *= Math.exp(-dt / 0.35);
       } else {
         if (!touched && !still.matches && !sceneOn) {
           idleClock += dt;
-          v.turnTo = -0.42 + 0.5 * Math.sin(idleClock * 0.32);
+          v.turnTo = -0.3 + 0.45 * Math.sin(idleClock * 0.32 - 0.27);
         }
         v.turn += (v.turnTo - v.turn) * (1 - Math.exp(-dt / 0.3));
       }
@@ -443,6 +443,7 @@ const Stage = (() => {
     const mark = B.toBox(B.turned([0, -238, 0]));
     el.index.setAttribute("cx", mark[0].toFixed(2));
     el.index.setAttribute("cy", mark[1].toFixed(2));
+    el.index.setAttribute("r", (3.4 / v.scale).toFixed(2));
     placePins();
   }
 

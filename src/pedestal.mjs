@@ -61,7 +61,7 @@ export function pedestal(P) {
   const [rx, ry] = ROD;
   const rod = [];
   rod.push(S(k.cylinder(rx, ry, 30, top, 10, P, 28, 1.5), { tone: "mid" }));
-  rod.push(S(k.cylinder(rx, ry, 17, top + 10, 26, P, 24), { tone: "mid", inner: Ln(k.knurl(rx, ry, 17, top + 13, top + 33, 20, P), { tone: "lo" }) }));
+  rod.push(S(k.cylinder(rx, ry, 17, top + 10, 26, P, 24), { tone: "mid", inner: Ln(k.knurl(rx, ry, 17, top + 10, top + 36, 20, P), { tone: "lo" }) }));
   let rings = "", majors = "";
   for (let z = 100; z <= 1700; z += 100) (z % 500 === 0 ? (majors += k.sideArc(rx, ry, ROD_R, z, P, 12)) : (rings += k.sideArc(rx, ry, ROD_R, z, P, 12)));
   rod.push(S(k.cylinder(rx, ry, ROD_R, top + 36, ROD_TOP - top - 36, P, 20), { tone: "mid", crease: "none", inner: Ln(rings, { tone: "lo" }) + Ln(majors, { tone: "hi" }) }));
@@ -71,7 +71,7 @@ export function pedestal(P) {
   // The cursor that slides on the rod, with its pointer towards the body.
   const cz = CURSOR_REST;
   const cursor = [
-    S(k.cylinder(rx, ry, 19, cz - 20, 40, P, 24, 1.5), { tone: "hi", inner: Ln(k.knurl(rx, ry, 19, cz - 14, cz + 14, 22, P), { tone: "lo" }) }),
+    S(k.cylinder(rx, ry, 19, cz - 20, 40, P, 24, 1.5), { tone: "hi", inner: Ln(k.knurl(rx, ry, 19, cz - 18.5, cz + 18.5, 22, P), { tone: "lo" }) }),
     S(k.slabOf({ x: rx + 16, y: ry - 7, w: 64, d: 14, r: 5 }, cz - 5, 10, P, 4, 1), { tone: "hi", lit: true }),
     Dots([at([rx + 70, ry, cz + 5])], { size: 0.5 }),
   ];
@@ -80,8 +80,9 @@ export function pedestal(P) {
   // Drum and turntable with its degree ring.
   out.push(S(k.cylinder(0, 0, DRUM_R, DRUM_Z, DRUM_H, P, 120, 2.4), { tone: "mid", inner: Ln(k.sideArc(0, 0, DRUM_R, DRUM_Z + 9, P, 96) + k.sideArc(0, 0, DRUM_R, DRUM_Z + 19, P, 96), { tone: "faint" }) }));
   out.push(Ln(k.ring(0, 0, DRUM_R - 9, DRUM_Z + DRUM_H, P, 120), { tone: "faint" }));
-  out.push(S(k.cylinder(0, 0, TABLE_R, -TABLE_H, TABLE_H, P, 120, 1.6), { tone: "mid", inner: Ln(k.knurl(0, 0, TABLE_R, -TABLE_H + 3, -3, 150, P), { tone: "faint" }) }));
-  out.push(Ln(k.ring(0, 0, TABLE_R - 12, 0, P, 120) + k.ring(0, 0, TABLE_R - 38, 0, P, 120), { tone: "lo" }));
+  out.push(S(k.cylinder(0, 0, TABLE_R, -TABLE_H, TABLE_H, P, 120, 1.6), { tone: "mid", inner: Ln(k.knurl(0, 0, TABLE_R, -TABLE_H, -1.6, 150, P), { tone: "faint" }) }));
+  // The ticks hang from this ring, so each one ends on a line.
+  out.push(Ln(k.ring(0, 0, TABLE_R - 13, 0, P, 144) + k.ring(0, 0, TABLE_R - 38, 0, P, 120), { tone: "lo" }));
   const dial = k.radialTicks(0, 0, TABLE_R - 13, 72, 6, 0, [9, 18], P);
   out.push(Ln(dial.minor, { tone: "lo" }), Ln(dial.major, { tone: "mid" }));
   out.push(Ln(k.ring(0, 0, 150, 0, P, 96), { tone: "faint" }));
